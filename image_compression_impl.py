@@ -4,35 +4,26 @@ from PIL import Image
 
 # Function to load and preprocess the image
 def load_image(image_path):
-    # Open the image file using PIL
     image = Image.open(image_path)
-    # Convert the image to RGB format (to avoid issues with grayscale images)
     image = image.convert('RGB')
-    # Convert the image to a NumPy array
     image_np = np.array(image)
     return image_np
-    #raise NotImplementedError('You need to implement this function')
 
 # Function to perform KMeans clustering for image quantization
-def image_compression(image_np, n_colors):
-        # Get the dimensions of the image
-    h, w, c = image_np.shape
-    
-    # Reshape the image into a 2D array (pixels x 3)
+def image_compression(image_np, n_colors):  
     image_2d = image_np.reshape(-1, 3)
-    
     # Apply KMeans clustering
     kmeans = KMeans(n_clusters=n_colors)
     kmeans.fit(image_2d)
     
     # Get the cluster centers (new colors)
-    new_colors = kmeans.cluster_centers_.astype('uint8')
-    
+    new_colors = kmeans.cluster_centers_[kmeans.labels_]
     # Map each pixel to its new color
-    compressed_image_2d = new_colors[kmeans.labels_]
+    compressed_image_2d = np.clip(new_colors.astype('uint8'), 0, 255) 
+    
     
     # Reshape the compressed image back to the original shape
-    compressed_image = compressed_image_2d.reshape(h, w, c)
+    compressed_image = compressed_image_2d.reshape(image_np.shape)
     
     return compressed_image
     #raise NotImplementedError('You need to implement this function')
@@ -52,7 +43,6 @@ def save_result(original_image_np, quantized_image_np, output_path):
     # Paste original and quantized images side by side
     combined_image.paste(original_image, (0, 0))
     combined_image.paste(quantized_image, (width, 0))
-    
     # Save the combined image
     combined_image.save(output_path)
 
